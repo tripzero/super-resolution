@@ -14,6 +14,7 @@ from tensorflow.keras.optimizers.schedules import PiecewiseConstantDecay
 
 
 class Trainer:
+
     def __init__(self,
                  model,
                  loss,
@@ -26,9 +27,10 @@ class Trainer:
                                               psnr=tf.Variable(-1.0),
                                               optimizer=Adam(learning_rate),
                                               model=model)
-        self.checkpoint_manager = tf.train.CheckpointManager(checkpoint=self.checkpoint,
-                                                             directory=checkpoint_dir,
-                                                             max_to_keep=3)
+        self.checkpoint_manager = tf.train.CheckpointManager(
+            checkpoint=self.checkpoint,
+            directory=checkpoint_dir,
+            max_to_keep=3)
 
         self.restore()
 
@@ -36,7 +38,10 @@ class Trainer:
     def model(self):
         return self.checkpoint.model
 
-    def train(self, train_dataset, valid_dataset, steps, evaluate_every=1000, save_best_only=False):
+    def train(self, train_dataset, valid_dataset,
+              steps,
+              evaluate_every=1000,
+              save_best_only=False):
         loss_mean = Mean()
 
         ckpt_mgr = self.checkpoint_manager
@@ -80,8 +85,10 @@ class Trainer:
             sr = self.checkpoint.model(lr, training=True)
             loss_value = self.loss(hr, sr)
 
-        gradients = tape.gradient(loss_value, self.checkpoint.model.trainable_variables)
-        self.checkpoint.optimizer.apply_gradients(zip(gradients, self.checkpoint.model.trainable_variables))
+        gradients = tape.gradient(
+            loss_value, self.checkpoint.model.trainable_variables)
+        self.checkpoint.optimizer.apply_gradients(
+            zip(gradients, self.checkpoint.model.trainable_variables))
 
         return loss_value
 
@@ -95,33 +102,39 @@ class Trainer:
 
 
 class EdsrTrainer(Trainer):
+
     def __init__(self,
                  model,
                  checkpoint_dir,
                  learning_rate=PiecewiseConstantDecay(boundaries=[200000], values=[1e-4, 5e-5])):
-        super().__init__(model, loss=MeanAbsoluteError(), learning_rate=learning_rate, checkpoint_dir=checkpoint_dir)
+        super().__init__(model, loss=MeanAbsoluteError(),
+                         learning_rate=learning_rate, checkpoint_dir=checkpoint_dir)
 
     def train(self, train_dataset, valid_dataset, steps=300000, evaluate_every=1000, save_best_only=True):
         super().train(train_dataset, valid_dataset, steps, evaluate_every, save_best_only)
 
 
 class WdsrTrainer(Trainer):
+
     def __init__(self,
                  model,
                  checkpoint_dir,
                  learning_rate=PiecewiseConstantDecay(boundaries=[200000], values=[1e-3, 5e-4])):
-        super().__init__(model, loss=MeanAbsoluteError(), learning_rate=learning_rate, checkpoint_dir=checkpoint_dir)
+        super().__init__(model, loss=MeanAbsoluteError(),
+                         learning_rate=learning_rate, checkpoint_dir=checkpoint_dir)
 
     def train(self, train_dataset, valid_dataset, steps=300000, evaluate_every=1000, save_best_only=True):
         super().train(train_dataset, valid_dataset, steps, evaluate_every, save_best_only)
 
 
 class SrganGeneratorTrainer(Trainer):
+
     def __init__(self,
                  model,
                  checkpoint_dir,
                  learning_rate=1e-4):
-        super().__init__(model, loss=MeanSquaredError(), learning_rate=learning_rate, checkpoint_dir=checkpoint_dir)
+        super().__init__(model, loss=MeanSquaredError(),
+                         learning_rate=learning_rate, checkpoint_dir=checkpoint_dir)
 
     def train(self, train_dataset, valid_dataset, steps=1000000, evaluate_every=1000, save_best_only=True):
         super().train(train_dataset, valid_dataset, steps, evaluate_every, save_best_only)
@@ -131,6 +144,7 @@ class SrganTrainer:
     #
     # TODO: model and optimizer checkpoints
     #
+
     def __init__(self,
                  generator,
                  discriminator,
@@ -186,11 +200,15 @@ class SrganTrainer:
             perc_loss = con_loss + 0.001 * gen_loss
             disc_loss = self._discriminator_loss(hr_output, sr_output)
 
-        gradients_of_generator = gen_tape.gradient(perc_loss, self.generator.trainable_variables)
-        gradients_of_discriminator = disc_tape.gradient(disc_loss, self.discriminator.trainable_variables)
+        gradients_of_generator = gen_tape.gradient(
+            perc_loss, self.generator.trainable_variables)
+        gradients_of_discriminator = disc_tape.gradient(
+            disc_loss, self.discriminator.trainable_variables)
 
-        self.generator_optimizer.apply_gradients(zip(gradients_of_generator, self.generator.trainable_variables))
-        self.discriminator_optimizer.apply_gradients(zip(gradients_of_discriminator, self.discriminator.trainable_variables))
+        self.generator_optimizer.apply_gradients(
+            zip(gradients_of_generator, self.generator.trainable_variables))
+        self.discriminator_optimizer.apply_gradients(
+            zip(gradients_of_discriminator, self.discriminator.trainable_variables))
 
         return perc_loss, disc_loss
 

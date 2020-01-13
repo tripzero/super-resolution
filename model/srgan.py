@@ -1,4 +1,14 @@
-from tensorflow.python.keras.layers import Add, BatchNormalization, Conv2D, Dense, Flatten, Input, LeakyReLU, PReLU, Lambda
+from tensorflow.python.keras.layers import Add, \
+    BatchNormalization, \
+    Conv2D, \
+    Dense, \
+    Flatten, \
+    Input, \
+    LeakyReLU, \
+    PReLU, \
+    Lambda, \
+    ConvLSTM2D
+
 from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.applications.vgg19 import VGG19
 
@@ -51,7 +61,8 @@ generator = sr_resnet
 
 
 def discriminator_block(x_in, num_filters, strides=1, batchnorm=True, momentum=0.8):
-    x = Conv2D(num_filters, kernel_size=3, strides=strides, padding='same')(x_in)
+    x = Conv2D(num_filters, kernel_size=3,
+               strides=strides, padding='same')(x_in)
     if batchnorm:
         x = BatchNormalization(momentum=momentum)(x)
     return LeakyReLU(alpha=0.2)(x)
